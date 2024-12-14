@@ -12,9 +12,9 @@ DGomp::DGomp() : ScalarDist("dgomp", 3, jags::DIST_POSITIVE) {}
 
 // PDF (density)
 // PDF (logDensity) for the Gompertz distribution
-double DGomp::logDensity(double x, jags::PDFType type, 
+double DGomp::logDensity(double x, jags::PDFType type,
                          std::vector<double const *> const &params,
-                         double const *lbound, double const *ubound) const {
+                         double const *lower, double const *upper) const {
     double b = *params[0]; // Scale parameter
     double a = *params[1]; // Shape parameter
     double max_age = *params[2];
@@ -35,8 +35,8 @@ double DGomp::logDensity(double x, jags::PDFType type,
 
 
 // RNG (random generation)
-double DGomp::randomSample(std::vector<double const *> const &params, 
-                           double const *lower, double const *upper, 
+double DGomp::randomSample(std::vector<double const *> const &params,
+                           double const *lower, double const *upper,
                            jags::RNG *rng) const {
     double b = *params[0];
     double a = *params[1];
