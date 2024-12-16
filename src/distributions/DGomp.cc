@@ -10,7 +10,6 @@ namespace Gompertz {
 
 DGomp::DGomp() : ScalarDist("dgomp", 3, jags::DIST_POSITIVE) {}
 
-// PDF (density)
 // PDF (logDensity) for the Gompertz distribution
 double DGomp::logDensity(double x, jags::PDFType type,
                          std::vector<double const *> const &params,
@@ -24,12 +23,13 @@ double DGomp::logDensity(double x, jags::PDFType type,
         return JAGS_NEGINF;  // Log(0) is -infinity, so we return JAGS_NEGINF
     }
 
-    // Compute the density for x >= 0
-    double exp_bx = std::exp(b * x);
-    double density = a * exp_bx * std::exp(-a/b * (exp_bx - 1));
+    // Compute log(density) directly to avoid numerical issues
+    double log_exp_bx = b * x;  // b * x is the argument of the first exp()
+    double exp_bx = std::exp(log_exp_bx);  // exp(b * x)
+    double log_density = std::log(a) + log_exp_bx - (a / b) * (exp_bx - 1);
 
-    // Return log(density) if the density is positive; otherwise, return JAGS_NEGINF
-    return (density == 0) ? JAGS_NEGINF : std::log(density);
+    // Return log(density) if valid; otherwise, return JAGS_NEGINF
+    return std::isfinite(log_density) ? log_density : JAGS_NEGINF;
 }
 
 
@@ -38,18 +38,21 @@ double DGomp::logDensity(double x, jags::PDFType type,
 double DGomp::randomSample(std::vector<double const *> const &params,
                            double const *lower, double const *upper,
                            jags::RNG *rng) const {
-    double b = *params[0];
-    double a = *params[1];
-    double max_age = *params[2];
+  double b = *params[0];
+  double a = *params[1];
+  double max_age = *params[2];
 
-    // Generate a valid sample respecting bounds
-    double x;
-    do {
-        double u = rng->uniform(); // Generate a uniform random variable in (0,1)
-        x = std::log(1 - (std::log(1 - u) / a)) / b; // Transform uniform random variable
-    } while ((lower && x < *lower) || (upper && x > *upper) || x > max_age); // Check bounds
+  // Truncate to effective maximum age
+  double exp_neg_b_max_age = std::exp(-b * max_age);
+  double F_upper = 1 - std::exp(-a * (1 - exp_neg_b_max_age));
 
-    return x;
+  // Generate a uniform random variable in (0, F_upper)
+  double u = rng->uniform() * F_upper;
+
+  // Inverse CDF transformation
+  double x = -std::log(1 - std::log(1 - u) / a) / b;
+
+  return x;
 }
 
 

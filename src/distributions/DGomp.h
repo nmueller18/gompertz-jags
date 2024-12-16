@@ -10,7 +10,7 @@ public:
     DGomp(); // Constructor
 
     // Corrected method signatures with proper overrides
-    double logDensity(double x, jags::PDFType type, 
+    double logDensity(double x, jags::PDFType type,
                       std::vector<double const *> const &params, double const *lower, double const *upper) const;
 
     double randomSample(std::vector<double const *> const &params, double const *lower, double const *upper, jags::RNG *rng) const;
