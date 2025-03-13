@@ -1,23 +1,30 @@
 #ifndef DGOMP_H
 #define DGOMP_H
 
-#include <distribution/ScalarDist.h> // JAGS base class for distributions
+#include <distribution/RScalarDist.h>  // JAGS base class for RScalarDist
 
 namespace Gompertz {
 
-class DGomp : public jags::ScalarDist {
+class DGomp : public jags::RScalarDist {
 public:
-    DGomp(); // Constructor
+  // Constructor
+  DGomp();
 
-    // Corrected method signatures with proper overrides
-    double logDensity(double x, jags::PDFType type,
-                      std::vector<double const *> const &params, double const *lower, double const *upper) const;
+  // Probability density function (PDF)
+  double d(double x, jags::PDFType type, std::vector<double const *> const &params, bool give_log) const;
 
-    double randomSample(std::vector<double const *> const &params, double const *lower, double const *upper, jags::RNG *rng) const;
+  // Cumulative distribution function (CDF)
+  double p(double x, std::vector<double const *> const &params, bool lower, bool give_log) const;
 
-    double typicalValue(std::vector<double const *> const &params, double const *lower, double const *upper) const;
+  // Quantile function (Inverse CDF)
+  double q(double p, std::vector<double const *> const &params, bool lower, bool log_p) const;
 
-    bool checkParameterValue(std::vector<double const *> const &params) const;
+  // Random number generation (RNG)
+  double r(std::vector<double const *> const &params, jags::RNG *rng) const;
+
+  // Parameter validation
+  bool checkParameterValue(std::vector<double const *> const &params) const;
+
 };
 
 } // namespace Gompertz
